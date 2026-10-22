@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Striver DSA Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">PERSONAL STUDY TRACKER</p>
+        <h1>Striver DSA Sheet</h1>
+        <p class="subtle">Mark progress, keep your revision material beside each question, and use the full reference sheet whenever you need it.</p>
+      </div>
+      <div class="progress-card" aria-label="Overall completion">
+        <div class="progress-ring" id="progressRing"><span id="progressPercent">0%</span></div>
+        <div><strong id="progressLabel">0 of 452 complete</strong><small>Overall progress</small></div>
+      </div>
+    </header>
+
+    <main>
+      <section class="toolbox" aria-label="Tracker controls">
+        <a class="pdf-button" href="reference/striver-dsa-sheet-all-questions.pdf" target="_blank" rel="noopener">Open reference PDF</a>
+        <label class="search"><span>Search</span><input id="searchInput" type="search" placeholder="Question, topic, or difficulty"></label>
+        <label class="filter"><span>Status</span><select id="statusFilter"><option value="all">All questions</option><option value="todo">Not done</option><option value="done">Done</option></select></label>
+        <label class="filter"><span>Difficulty</span><select id="difficultyFilter"><option value="all">All levels</option><option>Easy</option><option>Medium</option><option>Hard</option><option>Unrated</option></select></label>
+        <button class="secondary" id="resetButton" type="button">Reset progress</button>
+      </section>
+      <p class="storage-note">Your checkmarks and note attachments are saved only in this browser. Keep note files modest in size.</p>
+      <section id="topics" class="topics" aria-live="polite"></section>
+    </main>
+
+    <template id="questionTemplate">
+      <article class="question-row">
+        <label class="done-control"><input type="checkbox" class="done-checkbox"><span class="custom-check" aria-hidden="true"></span><span class="sr-only">Mark complete</span></label>
+        <div class="question-main"><strong class="question-name"></strong><span class="difficulty"></span></div>
+        <div class="resources"></div>
+        <div class="notes"><label class="note-upload">Add note<input class="note-input" type="file" accept="image/*,application/pdf" multiple></label><div class="note-list"></div></div>
+      </article>
+    </template>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

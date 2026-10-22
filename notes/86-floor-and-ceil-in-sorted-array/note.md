@@ -1,0 +1,6 @@
+# Floor and Ceil in Sorted Array
+
+Write your study notes here.
+
+Place image or PDF attachments in this same folder.
+

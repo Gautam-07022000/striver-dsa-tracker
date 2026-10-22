@@ -1,0 +1,6 @@
+# Find peak element
+
+Write your study notes here.
+
+Place image or PDF attachments in this same folder.
+

@@ -28,7 +28,7 @@
         <label class="filter"><span>Difficulty</span><select id="difficultyFilter"><option value="all">All levels</option><option>Easy</option><option>Medium</option><option>Hard</option><option>Unrated</option></select></label>
         <button class="secondary" id="resetButton" type="button">Reset progress</button>
       </section>
-      <p class="storage-note">Your checkmarks and note attachments are saved only in this browser. Keep note files modest in size.</p>
+      <p class="storage-note">Checkmarks stay in this browser. Every question has its own GitHub notes folder for files and a text note.</p>
       <section id="topics" class="topics" aria-live="polite"></section>
     </main>
 
@@ -37,7 +37,16 @@
         <label class="done-control"><input type="checkbox" class="done-checkbox"><span class="custom-check" aria-hidden="true"></span><span class="sr-only">Mark complete</span></label>
         <div class="question-main"><strong class="question-name"></strong><span class="difficulty"></span></div>
         <div class="resources"></div>
-        <div class="notes"><label class="note-upload">Add note<input class="note-input" type="file" accept="image/*,application/pdf" multiple></label><div class="note-list"></div></div>
+        <div class="notes">
+          <div class="note-actions">
+            <a class="note-upload" target="_blank" rel="noopener">Upload file</a>
+            <a class="note-editor" target="_blank" rel="noopener">Edit text note</a>
+            <button class="load-note" type="button">Load text note</button>
+          </div>
+          <span class="note-key"></span>
+          <label class="note-text-label">Text note (stored on GitHub)<textarea class="note-text" readonly placeholder="Load this question's GitHub text note."></textarea></label>
+          <div class="note-list"></div>
+        </div>
       </article>
     </template>
 

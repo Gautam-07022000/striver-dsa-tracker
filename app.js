@@ -1,7 +1,12 @@
 (() => {
   const data = window.STRIVER_TRACKER_DATA;
   const key = "striver-dsa-tracker-v1";
-  const state = JSON.parse(localStorage.getItem(key) || '{"done":{},"notes":{}}');
+  const state = JSON.parse(localStorage.getItem(key) || '{"done":{}}');
+  const githubRepo = "Gautam-07022000/striver-dsa-tracker";
+  const githubTreeApi = `https://api.github.com/repos/${githubRepo}/git/trees/main?recursive=1`;
+  const githubRawBase = `https://raw.githubusercontent.com/${githubRepo}/main`;
+  const githubNotesUpload = `https://github.com/${githubRepo}/upload/main/notes`;
+  const githubNotes = new Map();
   const topicsNode = document.querySelector("#topics");
   const template = document.querySelector("#questionTemplate");
   const search = document.querySelector("#searchInput");
@@ -24,14 +29,53 @@
     document.querySelector("#progressPercent").textContent = `${percent}%`;
     document.querySelector("#progressLabel").textContent = `${count} of ${all.length} complete`;
   }
+  function noteFolder(question) {
+    const slug = question.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return `${question.id}-${slug}`;
+  }
+  function githubPathUrl(path) {
+    return `${githubRawBase}/${path.split("/").map(encodeURIComponent).join("/")}`;
+  }
   function renderNotes(question, container) {
     container.replaceChildren();
-    (state.notes[question.id] || []).forEach((note, index) => {
-      const link = document.createElement("a"); link.className = "note-chip"; link.href = note.data; link.target = "_blank"; link.rel = "noopener"; link.textContent = note.name;
-      const remove = document.createElement("button"); remove.type = "button"; remove.textContent = "×"; remove.title = "Remove note";
-      remove.addEventListener("click", event => { event.preventDefault(); state.notes[question.id].splice(index, 1); save(); renderNotes(question, container); });
-      link.append(remove); container.append(link);
+    const notes = githubNotes.get(noteFolder(question)) || [];
+    if (!notes.length) {
+      const empty = document.createElement("span"); empty.className = "note-empty"; empty.textContent = "No GitHub notes yet"; container.append(empty); return;
+    }
+    notes.forEach(note => {
+      const link = document.createElement("a"); link.className = "note-chip"; link.href = note.url; link.target = "_blank"; link.rel = "noopener"; link.textContent = note.name; container.append(link);
     });
+  }
+  async function loadGitHubNotes() {
+    try {
+      const response = await fetch(githubTreeApi, { headers: { Accept: "application/vnd.github+json" } });
+      if (!response.ok) return;
+      const tree = await response.json();
+      tree.tree.filter(file => file.type === "blob").forEach(file => {
+        const match = file.path.match(/^notes\/([^/]+)\/(.+)$/);
+        if (!match || match[2] === "note.md") return;
+        const note = { name: match[2], url: githubPathUrl(file.path) };
+        githubNotes.set(match[1], [...(githubNotes.get(match[1]) || []), note]);
+      });
+    } catch (_) {
+      // Notes are optional; the tracker remains usable if GitHub is unavailable.
+    } finally {
+      render();
+    }
+  }
+  async function loadTextNote(folder, textarea, button) {
+    if (textarea.dataset.loaded === "true") return;
+    textarea.value = "Loading GitHub text note…";
+    button.disabled = true;
+    try {
+      const response = await fetch(githubPathUrl(`notes/${folder}/note.md`));
+      textarea.value = response.ok ? await response.text() : "No text note has been added yet.";
+      textarea.dataset.loaded = "true";
+    } catch (_) {
+      textarea.value = "The GitHub text note could not be loaded. Please try again.";
+    } finally {
+      button.disabled = false;
+    }
   }
   function addResources(question, node) {
     [[question.leetcode, "LeetCode", ""], [question.gfg, "GeeksforGeeks", ""], [question.youtube, "Video", "video"]].forEach(([url, label, cls]) => {
@@ -52,10 +96,15 @@
         node.querySelector(".question-name").textContent = question.name;
         const badge = node.querySelector(".difficulty"); badge.textContent = question.difficulty; badge.dataset.level = question.difficulty;
         addResources(question, node.querySelector(".resources"));
-        const list = node.querySelector(".note-list"); renderNotes(question, list);
-        node.querySelector(".note-input").addEventListener("change", event => {
-          [...event.target.files].forEach(file => { const reader = new FileReader(); reader.onload = () => { (state.notes[question.id] ||= []).push({name:file.name, data:reader.result}); save(); renderNotes(question, list); }; reader.readAsDataURL(file); });
-        });
+        const folder = noteFolder(question);
+        const upload = node.querySelector(".note-upload"); upload.href = `${githubNotesUpload}/${encodeURIComponent(folder)}`;
+        upload.title = `Upload a PDF or image to this question's GitHub folder`;
+        const editor = node.querySelector(".note-editor"); editor.href = `https://github.com/${githubRepo}/edit/main/notes/${encodeURIComponent(folder)}/note.md`;
+        node.querySelector(".note-key").textContent = `GitHub folder: notes/${folder}`;
+        const textarea = node.querySelector(".note-text");
+        const loadButton = node.querySelector(".load-note");
+        loadButton.addEventListener("click", () => loadTextNote(folder, textarea, loadButton));
+        renderNotes(question, node.querySelector(".note-list"));
         section.append(node);
       });
       topicsNode.append(section);
@@ -66,6 +115,6 @@
     control.addEventListener("input", render);
     control.addEventListener("change", render);
   });
-  document.querySelector("#resetButton").addEventListener("click", () => { if (confirm("Reset all completion checkmarks? Notes will remain.")) { state.done = {}; save(); render(); updateProgress(); } });
-  updateProgress(); render();
+  document.querySelector("#resetButton").addEventListener("click", () => { if (confirm("Reset all completion checkmarks? GitHub notes will remain.")) { state.done = {}; save(); render(); updateProgress(); } });
+  updateProgress(); render(); loadGitHubNotes();
 })();
